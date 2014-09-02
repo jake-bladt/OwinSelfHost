@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Threading;
+using Microsoft.Owin.Hosting;
 using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.Diagnostics;
 using Microsoft.WindowsAzure.ServiceRuntime;
@@ -13,6 +14,8 @@ namespace OwinServiceRole
 {
     public class WorkerRole : RoleEntryPoint
     {
+        private IDisposable _app = null;
+
         public override void Run()
         {
             // This is a sample worker implementation. Replace with your logic.
@@ -30,10 +33,25 @@ namespace OwinServiceRole
             // Set the maximum number of concurrent connections 
             ServicePointManager.DefaultConnectionLimit = 12;
 
-            // For information on handling configuration changes
-            // see the MSDN topic at http://go.microsoft.com/fwlink/?LinkId=166357.
+            var endpoint = RoleEnvironment.CurrentRoleInstance.InstanceEndpoints["httpEndpoint"];
+            string baseUri = String.Format("{0}://{1}",
+                endpoint.Protocol, endpoint.IPEndpoint);
 
+            Trace.TraceInformation(String.Format("Starting OWIN at {0}", baseUri),
+                "Information");
+
+            _app = WebApp.Start<Startup>(new StartOptions(url: baseUri));
             return base.OnStart();
         }
+
+        public override void OnStop()
+        {
+            if (_app != null)
+            {
+                _app.Dispose();
+            }
+            base.OnStop();
+        }
+
     }
 }
