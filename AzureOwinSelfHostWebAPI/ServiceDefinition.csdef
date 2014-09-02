@@ -4,5 +4,8 @@
     <Imports>
       <Import moduleName="Diagnostics" />
     </Imports>
+    <Endpoints>
+      <InputEndpoint name="httpEndpoint" protocol="http" port="80" localPort="80" />
+    </Endpoints>
   </WorkerRole>
 </ServiceDefinition>
